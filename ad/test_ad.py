@@ -140,3 +140,8 @@ ns2.test.com. 1200      IN A    10.0.0.2
     @mock.patch('pymacad.ad._cmd_dig_check', mock.Mock(return_value=_dig_notok))
     def test_accessible_ok(self):
         self.assertFalse(ad.accessible('TEST.COM'))
+
+    _side_effect=subprocess.CalledProcessError(1, ['dig', '-t', 'srv', '_ldap._tcp.TEST.COM'], output="")
+    @mock.patch('pymacad.ad._cmd_dig_check', mock.Mock(side_effect=_side_effect))
+    def test_accessible_processerror(self):
+        nose.tools.assert_raises(subprocess.CalledProcessError, ad.accessible, 'TEST.COM')

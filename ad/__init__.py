@@ -71,9 +71,13 @@ def _cmd_dig_check(domain):
         return dig
 
 def accessible(domain):
-    dig = _cmd_dig_check(domain)
-    if 'ANSWER SECTION' not in dig:
-        return False
+    try:
+        dig = _cmd_dig_check(domain)
+    except subprocess.CalledProcessError:
+        raise
     else:
-        return True
+        if 'ANSWER SECTION' not in dig:
+            return False
+        else:
+            return True
 

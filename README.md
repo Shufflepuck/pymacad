@@ -21,7 +21,7 @@ I would suggest to use `from pymacad import ad` -- then call using ad.xxx
 #### ad.bound()
 checks if computer is bound to AD
 - returns True or False 
-- raises CalledProcessError
+- raises subprocess.CalledProcessError
 
 #### ad.principal(user)
 gets principal from AD. If no user is specified, uses the current user. 
@@ -31,6 +31,7 @@ gets principal from AD. If no user is specified, uses the current user.
 #### ad.accessible()
 checks if domain can be joined. 
 - Returns True or False
+- raises subprocess.CalledProcessError
     
 ### Exceptions
 - pymacad.ad.NotReachable

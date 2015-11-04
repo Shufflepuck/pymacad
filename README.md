@@ -1,4 +1,16 @@
+[![Build Status](https://travis-ci.org/ftiff/pymacad.svg?branch=master)](https://travis-ci.org/ftiff/pymacad)
+[![codecov.io](https://codecov.io/github/ftiff/pymacad/coverage.svg?branch=master)](https://codecov.io/github/ftiff/pymacad?branch=master)
+
 # pymacad
+
+## Acknowledgments 
+
+This python package is based on KerbMinder (http://github.com/pmbuko/KerbMinder). 
+
+* [Peter Bukowinski](http://github.com/pmbuko), author of KerbMinder
+* [Francois 'ftiff' Levaux-Tiffreau](http://github.com/ftiff), who extracted this package
+* [Ben Toms](http://github.com/macmule), who gave ftiff the idea
+* [Allister Banks](https://twitter.com/Sacrilicious/status/543451138239258624) for pointing out an effective dig command to test for domain reachability.
 
 ## pymacad.ad
 

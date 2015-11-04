@@ -16,6 +16,17 @@ This python package is based on KerbMinder (http://github.com/pmbuko/KerbMinder)
 
 I would suggest to use `from pymacad import ad` -- then call using ad.xxx
 
+### Example
+```python
+>>> from pymacad import ad
+>>> ad.bound()
+False
+>>> ad.accessible('TEST.COM')
+False
+>>> ad.accessible('FTI.IO')
+True
+```
+
 ### Functions
 
 #### ad.bound()

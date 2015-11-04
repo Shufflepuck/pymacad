@@ -3,6 +3,15 @@
 
 # pymacad
 
+## Acknowledgments 
+
+This python package is based on KerbMinder (http://github.com/pmbuko/KerbMinder). 
+
+* [Peter Bukowinski](http://github.com/pmbuko), author of KerbMinder
+* [Francois 'ftiff' Levaux-Tiffreau](http://github.com/ftiff), who extracted this package
+* * [Ben Toms](http://github.com/macmule), who gave ftiff the idea
+* [Allister Banks](https://twitter.com/Sacrilicious/status/543451138239258624) for pointing out an effective dig command to test for domain reachability.
+
 ## pymacad.ad
 
 I would suggest to use `from pymacad import ad` -- then call using ad.xxx

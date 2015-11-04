@@ -73,7 +73,7 @@ def _cmd_dig_check(domain):
 def accessible(domain):
     dig = _cmd_dig_check(domain)
     if 'ANSWER SECTION' not in dig:
-        raise NotReachable
+        return False
     else:
         return True
 

@@ -18,8 +18,7 @@ gets principal from AD. If no user is specified, uses the current user.
 
 #### ad.accessible()
 checks if domain can be joined. 
-- Returns True 
-- Raises NotReachable
+- Returns True or False
     
 ### Exceptions
 - pymacad.ad.NotReachable

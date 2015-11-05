@@ -107,7 +107,7 @@ def accessible(domain=domain_dns()):
         else:
             return True
 
-def get_membership(user=_get_consoleuser()):
+def membership(user=_get_consoleuser()):
     ad_group_info = _dscl(nodename=adnode(), query='memberOf', user=user)
     if ad_group_info:
         groups = [line[line.find('CN=')+3:line.find(',')]

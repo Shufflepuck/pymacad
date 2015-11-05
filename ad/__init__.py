@@ -1,8 +1,25 @@
 import subprocess
-import getpass
+from SystemConfiguration import SCDynamicStoreCreate, \
+                                SCDynamicStoreCopyValue, \
+                                SCDynamicStoreCopyConsoleUser
 
 def _cmd_dsconfigad_show():
     return subprocess.check_output(['dsconfigad', '-show'])
+
+def _get_consoleuser():
+    return SCDynamicStoreCopyConsoleUser(None, None, None)[0]
+
+def _dscl(nodename='.', scope=None, query=None, user=_get_consoleuser()):
+    if not scope:
+        scope = '/Users/{0}'.format(user)
+    cmd = ['dscl', nodename, '-read', scope]
+    if query:
+        cmd.append(query)
+    try:
+        output = subprocess.check_output(cmd, stderr=subprocess.STDOUT)
+        return output
+    except subprocess.CalledProcessError:
+        return None
 
 def bound():
     try:
@@ -15,14 +32,22 @@ def bound():
     except subprocess.CalledProcessError:
         raise
 
+def searchnodes():
+    net_config = SCDynamicStoreCreate(None, 'directory-nodes', None, None)
+    nodes = SCDynamicStoreCopyValue(net_config, 'com.apple.opendirectoryd.node:/Search')
+    return list(nodes)
 
-def _cmd_dscl_search(user_path):
-    return subprocess.check_output(['dscl',
-                                     '/Search',
-                                     'read',
-                                     user_path,
-                                     'AuthenticationAuthority'],
-                                     stderr=subprocess.STDOUT)
+
+def adnode():
+    nodes = searchnodes()
+    ad_node = [node for node in nodes if 'Active Directory' in node]
+    return ad_node[0] if ad_node else None
+
+
+def domain_dns():
+    net_config = SCDynamicStoreCreate(None, 'active-directory', None, None)
+    ad_info = SCDynamicStoreCopyValue(net_config, 'com.apple.opendirectoryd.ActiveDirectory')
+    return ad_info.get('DomainNameDns')
 
 class ProcessError(subprocess.CalledProcessError):
     pass
@@ -43,17 +68,18 @@ def _extract_principal(string):
     else:
         return match
 
-def principal(user=getpass.getuser()):
+def principal(user=_get_consoleuser()):
     """Returns the principal of the current user when computer is bound"""
 
     if not bound():
         raise NotBound
 
-
     user_path = '/Users/' + user
 
     try:
-        output = _cmd_dscl_search(user_path)
+        output = _dscl('/Search', query='AuthenticationAuthority', scope=user_path)
+        if not output:
+            return 'User not found!'
         result = _extract_principal(output)
     except AttributeError:
         raise NotReachable
@@ -70,7 +96,7 @@ def _cmd_dig_check(domain):
     else:
         return dig
 
-def accessible(domain):
+def accessible(domain=domain_dns()):
     try:
         dig = _cmd_dig_check(domain)
     except subprocess.CalledProcessError:
@@ -81,3 +107,11 @@ def accessible(domain):
         else:
             return True
 
+def get_membership(user=_get_consoleuser()):
+    ad_group_info = _dscl(nodename=adnode(), query='memberOf', user=user)
+    if ad_group_info:
+        groups = [line[line.find('CN=')+3:line.find(',')]
+                  for line in ad_group_info.split('\n ') if 'CN=' in line]
+        return groups
+    else:
+        return list()

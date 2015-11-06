@@ -1,4 +1,5 @@
 import subprocess
+import plistlib
 from SystemConfiguration import SCDynamicStoreCreate, \
                                 SCDynamicStoreCopyValue, \
                                 SCDynamicStoreCopyConsoleUser
@@ -9,15 +10,20 @@ def _cmd_dsconfigad_show():
 def _get_consoleuser():
     return SCDynamicStoreCopyConsoleUser(None, None, None)[0]
 
-def _dscl(nodename='.', scope=None, query=None, user=_get_consoleuser()):
+def _dscl(plist=True, nodename='.', scope=None, query=None, user=_get_consoleuser()):
     if not scope:
         scope = '/Users/{0}'.format(user)
-    cmd = ['dscl', nodename, '-read', scope]
+    cmd = ['/usr/bin/dscl', nodename, '-read', scope]
+    if plist:
+        cmd.insert(1, '-plist')
     if query:
         cmd.append(query)
     try:
         output = subprocess.check_output(cmd, stderr=subprocess.STDOUT)
-        return output
+        if plist:
+            return plistlib.readPlistFromString(output)
+        else:
+            return output
     except subprocess.CalledProcessError:
         return None
 
@@ -115,3 +121,19 @@ def membership(user=_get_consoleuser()):
         return groups
     else:
         return list()
+
+def realms():
+    store = SCDynamicStoreCreate(None, 'default-realms', None, None)
+    realms = SCDynamicStoreCopyValue(store, 'Kerberos-Default-Realms')
+    return list(realms)
+
+
+def smb_home(node='.', user=_get_consoleuser()):
+    output = _dscl(nodename=node, query='SMBHome', user=user)
+    if output and 'No such key:' not in output:
+        out_split = output.split(' ')[1]
+        smb_home = out_split.replace('\\\\', '/').replace('\\', '/').strip('\n')
+        smb_url = '{0}{1}'.format('smb:/', smb_home)
+        return smb_url
+    else:
+        return ''

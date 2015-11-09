@@ -1,5 +1,5 @@
-[![Build Status](https://travis-ci.org/ftiff/pymacad.svg?branch=master)](https://travis-ci.org/ftiff/pymacad)
-[![codecov.io](https://codecov.io/github/ftiff/pymacad/coverage.svg?branch=master)](https://codecov.io/github/ftiff/pymacad?branch=master)
+[![Build Status](https://travis-ci.org/Shufflepuck/pymacad.svg?branch=master)](https://travis-ci.org/Shufflepuck/pymacad)
+[![codecov.io](https://codecov.io/github/Shufflepuck/pymacad/coverage.svg?branch=master)](https://codecov.io/github/ftiff/pymacad?branch=master)
 
 # pymacad
 

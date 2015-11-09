@@ -39,10 +39,29 @@ gets principal from AD. If no user is specified, uses the current user.
 - Returns principal
 - Raises NotBound, NotReachable or subprocess.CalledProcessError
 
-#### ad.accessible()
+#### ad.accessible(domain)
 checks if domain can be joined. 
 - Returns True or False
 - raises subprocess.CalledProcessError
+
+#### ad.searchnodes()
+returns a list of available directories
+
+#### ad.adnode()
+returns the first Active Directory node or None
+
+#### ad.get_domain_dns()
+returns the DNS of domain, or raises NotBound
+
+#### ad.membership(user)
+Returns a list of groups belonging to this user
+Raises NotBound
+
+#### ad.realms() 
+Returns a list of Kerberos realms, or NotBound
+
+#### ad.smb_home()
+Returns the home URL of the user, or an empty string.
     
 ### Exceptions
 - pymacad.ad.NotReachable

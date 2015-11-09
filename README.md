@@ -11,6 +11,7 @@ This python package is based on KerbMinder (http://github.com/pmbuko/KerbMinder)
 * [Francois 'ftiff' Levaux-Tiffreau](http://github.com/ftiff), who extracted this package
 * [Ben Toms](http://github.com/macmule), who gave ftiff the idea
 * [Allister Banks](https://twitter.com/Sacrilicious/status/543451138239258624) for pointing out an effective dig command to test for domain reachability.
+* [Kyle Crawshaw](http://github.com/kcrawshaw), who extended it significantly
 
 ## pymacad.ad
 

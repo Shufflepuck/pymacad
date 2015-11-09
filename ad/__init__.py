@@ -1,8 +1,17 @@
+
 import subprocess
 import plistlib
 from SystemConfiguration import SCDynamicStoreCreate, \
                                 SCDynamicStoreCopyValue, \
                                 SCDynamicStoreCopyConsoleUser
+
+def _need_bound(function):
+    """Decorator to raise NotBound when not bound to AD."""
+    def _wrapper(*args, **kwargs):
+        if not bound(): 
+            raise NotBound
+        result = function(*args, **kwargs)
+    return _wrapper
 
 def _cmd_dsconfigad_show():
     return subprocess.check_output(['dsconfigad', '-show'])
@@ -20,11 +29,20 @@ def _dscl(plist=True, nodename='.', scope=None, query=None, user=_get_consoleuse
         cmd.append(query)
     try:
         output = subprocess.check_output(cmd, stderr=subprocess.STDOUT)
+
+        if ('DSOpenDirServiceErr' or 'No such key') in output:
+            raise subprocess.CalledProcessError(1, cmd, output)
+
+        # Do not call readPlistFromString if string is empty
+	if output == '':
+            raise subprocess.CalledProcessError(1, cmd, output)
         if plist:
             return plistlib.readPlistFromString(output)
         else:
             return output
+
     except subprocess.CalledProcessError:
+        # I'm not too fond of returning None here -ftiff
         return None
 
 def bound():
@@ -50,10 +68,13 @@ def adnode():
     return ad_node[0] if ad_node else None
 
 
-def domain_dns():
+def get_domain_dns():
     net_config = SCDynamicStoreCreate(None, 'active-directory', None, None)
     ad_info = SCDynamicStoreCopyValue(net_config, 'com.apple.opendirectoryd.ActiveDirectory')
-    return ad_info.get('DomainNameDns')
+    if ad_info is not None:
+        return ad_info.get('DomainNameDns')
+    else:
+        raise NotBound
 
 class ProcessError(subprocess.CalledProcessError):
     pass
@@ -102,7 +123,7 @@ def _cmd_dig_check(domain):
     else:
         return dig
 
-def accessible(domain=domain_dns()):
+def accessible(domain):
     try:
         dig = _cmd_dig_check(domain)
     except subprocess.CalledProcessError:
@@ -113,6 +134,7 @@ def accessible(domain=domain_dns()):
         else:
             return True
 
+@_need_bound
 def membership(user=_get_consoleuser()):
     ad_group_info = _dscl(nodename=adnode(), query='memberOf', user=user)
     if ad_group_info:
@@ -122,7 +144,9 @@ def membership(user=_get_consoleuser()):
     else:
         return list()
 
+@_need_bound
 def realms():
+
     store = SCDynamicStoreCreate(None, 'default-realms', None, None)
     realms = SCDynamicStoreCopyValue(store, 'Kerberos-Default-Realms')
     return list(realms)

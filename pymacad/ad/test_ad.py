@@ -1,6 +1,3 @@
-import sys
-
-sys.path.insert(1, '/System/Library/Frameworks/Python.framework/Versions/2.7/Extras/lib/python/PyObjC')
 import nose
 import mock
 from pymacad import ad
@@ -72,19 +69,19 @@ No such key: AuthenticationAuthority
         nose.tools.assert_raises(ad.NotBound, ad.principal)
 
     @mock.patch('pymacad.ad.bound', mock.Mock(return_value=True))
-    @mock.patch('pymacad.ad._dscl', mock.Mock(return_value=_dscl_search_reachable))
+    @mock.patch('pymacad.ad._cmd_dscl_search', mock.Mock(return_value=_dscl_search_reachable))
     def test_principal_ok(self):
         nose.tools.eq_("testuser@TEST.COM", ad.principal('testuser'))
 
     @mock.patch('pymacad.ad.bound', mock.Mock(return_value=True))
-    @mock.patch('pymacad.ad._dscl', mock.Mock(return_value=_dscl_search_reachable))
+    @mock.patch('pymacad.ad._cmd_dscl_search', mock.Mock(return_value=_dscl_search_reachable))
     @mock.patch('pymacad.ad._extract_principal', mock.Mock(side_effect=AttributeError))
     def test_principal_attribute_error(self):
         nose.tools.assert_raises(ad.NotReachable, ad.principal)
 
     _side_effect=subprocess.CalledProcessError(1, ['dscl', '/Search', 'read', 'testuser', 'AuthenticationAuthority'], output="")
     @mock.patch('pymacad.ad.bound', mock.Mock(return_value=True))
-    @mock.patch('pymacad.ad._dscl', mock.Mock(return_value=_dscl_search_reachable))
+    @mock.patch('pymacad.ad._cmd_dscl_search', mock.Mock(return_value=_dscl_search_reachable))
     @mock.patch('pymacad.ad._extract_principal', mock.Mock(side_effect=_side_effect))
     def test_principal_process_error(self):
         nose.tools.assert_raises(subprocess.CalledProcessError, ad.principal)

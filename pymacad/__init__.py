@@ -1,8 +1,10 @@
 import subprocess
 import getpass
+from . import kerberos
+from . import ad
 
 def cmd_dsconfigad_show():
-    return subprocess.check_output(['dsconfigad', '-show']) 
+    return subprocess.check_output(['dsconfigad', '-show'])
 
 def bound_to_ad():
     try:

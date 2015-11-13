@@ -168,3 +168,10 @@ def caches(details=False):
         return caches
     else:
         return list()
+
+
+def delete_expired_caches():
+    current_caches = caches(details=True)
+    for c in current_caches:
+        if c.get('Expired') == 'yes':
+            destroy(cache=c.get('Cache name'))

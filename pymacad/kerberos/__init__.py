@@ -1,25 +1,41 @@
 import subprocess
-from pymacad import ad
+from .. import ad
 
 _incorrect_pass_attempts = 0
+class KeychainError(Exception):
+    pass
 
 def _keychain(action_type, item_type, args, return_code=False):
     import os
-    if item_type not in ['generic', 'internet']:
-        raise Exception()
-    if action_type not in ['add', 'find', 'delete']:
-        raise Exception()
+    available_actions = ['add', 'find', 'delete']
+    if action_type not in available_actions:
+        raise AttributeError('action_type must be in {0}'.format(available_actions))
+    available_types = ['generic', 'internet']
+    if item_type not in available_types:
+        raise AttributeError('item_type must be in {0}'.format(available_types))
+
     action = '{0}-{1}-password'.format(action_type, item_type)
     user_keychain = os.path.expanduser('~/Library/Keychains/login.keychain')
+
+    if isinstance(args, str):
+        args = list(args)
+
     cmd = ['/usr/bin/security', action] + args + [user_keychain]
     if return_code:
         return subprocess.call(cmd)
     else:
-        try:
-            out = subprocess.check_output(cmd, stderr=subprocess.STDOUT)
-            return out
-        except subprocess.CalledProcessError as e:
-            return None
+        p = subprocess.Popen(cmd, stdout=subprocess.PIPE,
+                             stderr=subprocess.PIPE)
+        out, err = p.communicate()
+        if err:
+            if 'exists' in err:
+                raise KeychainError('Keychain item already exists')
+            elif 'could not be found' in err:
+                return False
+            else:
+                print err
+        else:
+            return True
 
 
 def _cmd_klist(flag=None):
@@ -31,14 +47,8 @@ def _cmd_klist(flag=None):
     return json.loads(klist_output)
 
 
-def check_keychain(principal=None):
-    if principal:
-        username, realm = ad._split_principal(principal)
-    else:
-        if not ad.bound():
-            raise ad.NotBound
-        realm = ad.realms()[0]
-        username=ad._get_consoleuser()
+def check_keychain(principal=ad.principal()):
+    username, realm = ad._split_principal(principal)
     security_args = [
         '-a', username,
         '-l', realm.upper() + ' (' + username + ')',
@@ -53,7 +63,7 @@ def pass_to_keychain(principal, password):
     username, realm = ad._split_principal(principal)
     security_args = [
         '-a', username,
-        '-l', realm,
+        '-l', realm + '(' + username + ')',
         '-s', realm,
         '-c', 'aapl',
         '-T', '/usr/bin/kinit',
@@ -88,12 +98,14 @@ def kinit_keychain_command(principal):
     """Runs the kinit command with keychain password."""
     if not check_keychain(principal):
         return False
-    try:
-        subprocess.check_output(['/usr/bin/kinit', '-l', '10h', '--renewable',
-                                 '--keychain', ad._format_principal(principal)])
+    cmd = ['/usr/bin/kinit', '-l', '10h', '--renewable',
+           '--keychain', ad._format_principal(principal)]
+    p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    out, err = p.communicate()
+    if err and 'unable to reach' in err:
+        raise ad.NotReachable('Unable to get new kerberos ticket. Domain unreachable.')
+    else:
         return True
-    except:
-        return False
 
 
 def refresh_ticket():

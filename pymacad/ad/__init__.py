@@ -1,12 +1,8 @@
 import subprocess
-import plistlib
-from SystemConfiguration import SCDynamicStoreCreate, \
-                                SCDynamicStoreCopyValue, \
-                                SCDynamicStoreCopyConsoleUser
-
+import SystemConfiguration
 
 def _get_consoleuser():
-    return SCDynamicStoreCopyConsoleUser(None, None, None)[0]
+    return SystemConfiguration.SCDynamicStoreCopyConsoleUser(None, None, None)[0]
 
 
 def _cmd_dig_check(domain):
@@ -33,6 +29,7 @@ def _cmd_dscl(nodename='.', scope=None, query=None, user=_get_consoleuser(), pli
     try:
         output = subprocess.check_output(cmd, stderr=subprocess.STDOUT)
         if plist:
+            import plistlib
             return plistlib.readPlistFromString(output)
         else:
             return output
@@ -71,8 +68,8 @@ def bound():
 def searchnodes():
     if not bound():
         raise NotBound
-    net_config = SCDynamicStoreCreate(None, 'directory-nodes', None, None)
-    nodes = SCDynamicStoreCopyValue(net_config, 'com.apple.opendirectoryd.node:/Search')
+    net_config = SystemConfiguration.SCDynamicStoreCreate(None, 'directory-nodes', None, None)
+    nodes = SystemConfiguration.SCDynamicStoreCopyValue(net_config, 'com.apple.opendirectoryd.node:/Search')
     if nodes:
         return list(nodes)
     else:
@@ -90,8 +87,8 @@ def adnode():
 def domain_dns():
     if not bound():
         raise NotBound
-    net_config = SCDynamicStoreCreate(None, 'active-directory', None, None)
-    ad_info = SCDynamicStoreCopyValue(net_config, 'com.apple.opendirectoryd.ActiveDirectory')
+    net_config = SystemConfiguration.SCDynamicStoreCreate(None, 'active-directory', None, None)
+    ad_info = SystemConfiguration.SCDynamicStoreCopyValue(net_config, 'com.apple.opendirectoryd.ActiveDirectory')
     if ad_info:
         return ad_info.get('DomainNameDns')
     else:
@@ -137,7 +134,12 @@ def _format_principal(principal):
     return formatted
 
 def _split_principal(principal):
-    return principal.split('@')
+    '''Returns user and domain tuple'''
+    p_split = principal.split('@')
+    if len(p_split) == 2:
+        return p_split
+    else:
+        raise PrincipalFormatError('Invalid format for principal: {0}'.format(principal))
 
 
 def principal(user=_get_consoleuser()):
@@ -145,7 +147,6 @@ def principal(user=_get_consoleuser()):
 
     if not bound():
         raise NotBound
-
 
     user_path = '/Users/' + user
 
@@ -193,8 +194,8 @@ def membership(principal):
 def realms():
     if not bound():
         raise NotBound
-    store = SCDynamicStoreCreate(None, 'default-realms', None, None)
-    realms = SCDynamicStoreCopyValue(store, 'Kerberos-Default-Realms')
+    store = SystemConfiguration.SCDynamicStoreCreate(None, 'default-realms', None, None)
+    realms = SystemConfiguration.SCDynamicStoreCopyValue(store, 'Kerberos-Default-Realms')
     return list(realms) if realms else None
 
 
